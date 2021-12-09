@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import render_template, request, jsonify
+from flask_cors import CORS
 import json
 import os
 import metapy
@@ -10,6 +11,7 @@ import re
 
 
 app = Flask(__name__) 
+cors = CORS(app)
 environ = 'development'
 dataconfig = json.loads(open("config.json", "r").read())
 app.dataenv = dataconfig[environ]
@@ -41,6 +43,13 @@ def filtered_results(results,num_results,min_score,selected_uni_filters,selected
         university = index.metadata(res[0]).get('university')
         state = index.metadata(res[0]).get('state')
         country = index.metadata(res[0]).get('country') 
+        print(" --begin-------------- line_49")
+        print("filter res[0]:", res[0])
+        print("filter res[1]:", res[1])
+        print("index.metadata(res[0]):", type(index.metadata(res[0])))
+        # ('filter res[0]:', 6086L) ------------------- index
+        # ('filter res[1]:', 0.3868231773376465) ------ score
+        print(" --end-------------- line_49")
         if (res[1]>min_score) and (state in selected_loc_filters or country in selected_loc_filters) and (university in selected_uni_filters) :
             filtered_results.append(res)
             res_cnt += 1
@@ -49,12 +58,13 @@ def filtered_results(results,num_results,min_score,selected_uni_filters,selected
             countries.append(country)
             if res_cnt == num_results:
                 break
+    print(" --begin-------------- line_58")
+    print("filtered_results:", filtered_results)
+    print("universities:", universities)
+    print("states:", states)
+    print("countries:", countries)
+    print(" --end-------------- line_58")
     return filtered_results,universities,states,countries
-
-
-
-
-
 
 @app.route('/search', methods=['POST'])
 def search():
@@ -78,18 +88,35 @@ def search():
     results = ranker.score(index, query, 100) 
 
     results,universities,states,countries = filtered_results(results,num_results,min_score,selected_uni_filters,selected_loc_filters)
-
+    print("*******begin**************** line_96");
+    print("results size:", len(results))
+    print("results contents:", str(results))
+    print("results[0]", results[0])
+    print("results[1]", results[1])
+    print("results[2]", results[2])
+    print("results[3]", results[3])
+    print("results[4]", results[4])
+    print("*******end**************** line_96");
     doc_names = [index.metadata(res[0]).get('doc_name') for res in results]
     depts = [index.metadata(res[0]).get('department') for res in results]
     fac_names = [index.metadata(res[0]).get('fac_name') for res in results]
     fac_urls = [index.metadata(res[0]).get('fac_url') for res in results]
-   
 
-    previews = _get_doc_previews(doc_names,querytext)
+    previews = _get_doc_previews(doc_names, querytext)
     emails = [index.metadata(res[0]).get('email') for res in results]
+    phones = [index.metadata(res[0]).get('phone') for res in results]
+    print("++++++++++++++++++++++");
+    print("\n\n previews:", previews)
+    print("\n\n emails:", emails)
+    print("\n\n phones:", phones)
+    print("\n\n fac_names:", fac_names)
 
-
-    docs = list(zip(doc_names, previews, emails,universities,depts,fac_names,fac_urls,states,countries))
+    print("++++++++++++++++++++++");
+    docs = list(zip(doc_names, previews, emails, universities,depts, fac_names,fac_urls,states,countries, phones))
+    print("\n\n docs:", docs)
+    print("\n\n docs[0]:", docs[0])
+    print("\n\n docs[1]:", docs[1])
+    print("\n\n docs[2]:", docs[2])
 
     return jsonify({
         "docs": docs

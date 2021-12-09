@@ -80,7 +80,7 @@ def save_files(required_text):
     for i in required_text:
         #print('Saved file'+str(c))
         print 'Saved file'+str(c)
-        f = open('<Path_to_the_dir>'+str(c)+".txt", "a")
+        f = open('data/complied_bios/'+str(c)+".txt", "a")
         f.write(i.strip())
         f.close()
         c+=1 
